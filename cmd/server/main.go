@@ -19,6 +19,8 @@ func main() {
 
 	mux.HandleFunc("POST /accounts", apiCfg.HandlerCreateAccount)
 	mux.HandleFunc("GET /accounts", apiCfg.HandleGetAllAccounts)
+	mux.HandleFunc("DELETE /account", apiCfg.HandlrDeleteAccounts)
+	mux.HandleFunc("PUT /account", apiCfg.HandleUpdateAccount)
 
 	mux.HandleFunc("POST /integrations", apiCfg.HandleCreateIntegration)
 	mux.HandleFunc("GET /integrations", apiCfg.HandleGetIntegrations)
