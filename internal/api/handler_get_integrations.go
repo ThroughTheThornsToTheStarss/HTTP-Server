@@ -5,7 +5,7 @@ import (
 )
 
 func (api *apiConfig) HandleGetIntegrations(w http.ResponseWriter, r *http.Request) {
-	
+
 	accountID := r.URL.Query().Get("account_id")
 	if accountID == "" {
 		respondWithError(w, http.StatusBadRequest, "account_id is required")

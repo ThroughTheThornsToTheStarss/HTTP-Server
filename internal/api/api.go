@@ -1,14 +1,14 @@
 package api
 
-import "git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
-
+import (
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo"
+)
 
 type apiConfig struct {
-	repo domain.Repository
+	repo repo.Repository
 }
 
-
-func NewAPI(repo domain.Repository) *apiConfig {
+func NewAPI(repo repo.Repository) *apiConfig {
 	return &apiConfig{
 		repo: repo,
 	}
