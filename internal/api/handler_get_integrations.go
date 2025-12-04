@@ -12,7 +12,7 @@ func (api *apiConfig) HandleGetIntegrations(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	list, err := api.repo.GetIntegrationsByAccountID(accountID)
+	list, err := api.integrationUC.GetIntegrationsByAccountID(accountID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot get integrations")
 		return

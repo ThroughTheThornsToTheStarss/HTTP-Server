@@ -60,8 +60,8 @@ func (r *MemoryRepository) GetIntegrationsByAccountID(accountID string) ([]*doma
 }
 
 func (r *MemoryRepository) DeleteAccount(accountID string) error {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	delete(r.accounts, accountID)
 	delete(r.integrations, accountID)

@@ -1,15 +1,15 @@
 package api
 
-import (
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo"
-)
+import "git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 
 type apiConfig struct {
-	repo repo.Repository
+	accountUC     usecase.AccountUsecase
+	integrationUC usecase.IntegrationUsecase
 }
 
-func NewAPI(repo repo.Repository) *apiConfig {
+func NewAPI(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase) *apiConfig {
 	return &apiConfig{
-		repo: repo,
+		accountUC:     accountUC,
+		integrationUC: integrationUC,
 	}
 }

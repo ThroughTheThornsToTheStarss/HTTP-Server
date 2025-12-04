@@ -21,7 +21,7 @@ func (api *apiConfig) HandlerCreateAccount(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := api.repo.CreateAccount(&acc); err != nil {
+	if err := api.accountUC.CreateAccount(&acc); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot create account")
 		return
 	}

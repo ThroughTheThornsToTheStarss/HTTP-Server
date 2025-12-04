@@ -20,7 +20,7 @@ func (api *apiConfig) HandleUpdateAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := api.repo.UpdateAccount(&acc); err != nil {
+	if err := api.accountUC.UpdateAccount(&acc); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot update account")
 		return
 	}

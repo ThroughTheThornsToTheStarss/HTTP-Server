@@ -6,6 +6,7 @@ import (
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/in_memory"
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 )
 
 func main() {
@@ -13,14 +14,18 @@ func main() {
 	const port = "8080"
 
 	repo := in_memory.NewMemoryRepository()
-	apiCfg := api.NewAPI(repo)
+
+	accountUC := usecase.NewAccountUsecase(repo)
+	integrationUC := usecase.NewIntegrationUsecase(repo)
+
+	apiCfg := api.NewAPI(accountUC, integrationUC)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /accounts", apiCfg.HandlerCreateAccount)
 	mux.HandleFunc("GET /accounts", apiCfg.HandleGetAllAccounts)
-	mux.HandleFunc("DELETE /account", apiCfg.HandlrDeleteAccounts)
-	mux.HandleFunc("PUT /account", apiCfg.HandleUpdateAccount)
+	mux.HandleFunc("DELETE /accounts", apiCfg.HandlrDeleteAccount)
+	mux.HandleFunc("PUT /accounts", apiCfg.HandleUpdateAccount)
 
 	mux.HandleFunc("POST /integrations", apiCfg.HandleCreateIntegration)
 	mux.HandleFunc("GET /integrations", apiCfg.HandleGetIntegrations)
