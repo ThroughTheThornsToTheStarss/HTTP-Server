@@ -21,7 +21,7 @@ func (api *apiConfig) HandleCreateIntegration(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := api.repo.CreateIntegration(&in); err != nil {
+	if err := api.integrationUC.CreateIntegration(&in); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot create integration")
 		return
 	}
