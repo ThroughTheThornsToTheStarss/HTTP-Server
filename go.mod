@@ -1,3 +1,3 @@
 module git.amocrm.ru/ilnasertdinov/http-server-go
 
-go 1.25.4
+go 1.23
