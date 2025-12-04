@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repository/in_memory"
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/in_memory"
 )
 
 func main() {

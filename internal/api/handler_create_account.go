@@ -8,7 +8,7 @@ import (
 )
 
 func (api *apiConfig) HandlerCreateAccount(w http.ResponseWriter, r *http.Request) {
-	
+
 	var acc domain.Account
 
 	if err := json.NewDecoder(r.Body).Decode(&acc); err != nil {
