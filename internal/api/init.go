@@ -33,5 +33,7 @@ func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsec
 	mux.HandleFunc("GET /amo/auth/start", apiCfg.HandleAmoAuthStart)
 	mux.HandleFunc("GET /amo/oauth/callback", apiCfg.HandleAmoAuthCallback)
 
+	mux.HandleFunc("GET /amo/contacts", apiCfg.HandleAmoGetContacts)
+
 	return mux
 }
