@@ -41,11 +41,9 @@ func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Reques
 		item := contactResponse{
 			Name: c.Name,
 		}
-
+		item.Email = nil
 		if email, ok := c.PrimaryEmail(); ok {
 			item.Email = &email
-		} else {
-			item.Email = nil
 		}
 
 		resp = append(resp, item)
