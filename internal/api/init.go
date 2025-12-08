@@ -13,11 +13,7 @@ type apiConfig struct {
 	amoClient     *amocrm.OAuthClient
 }
 
-func New(
-	accountUC usecase.AccountUsecase,
-	integrationUC usecase.IntegrationUsecase,
-	amoClient *amocrm.OAuthClient,
-) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, amoClient *amocrm.OAuthClient) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,

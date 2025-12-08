@@ -9,9 +9,7 @@ import (
 
 
 func (api *apiConfig) HandleAmoAuthStart(w http.ResponseWriter, r *http.Request) {
-	state := "amo_oauth_state"
-
-	authURL := api.amoClient.AuthURL(state)
+	authURL := api.amoClient.AuthURL()
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
@@ -29,7 +27,13 @@ func (api *apiConfig) HandleAmoAuthCallback(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	tokens, err := api.amoClient.ExchangeCode(ctx, code)
+	referer := r.URL.Query().Get("referer")
+	if referer == "" {
+		respondWithError(w, http.StatusBadRequest, "referer is missing")
+		return
+	}
+
+	tokens, err := api.amoClient.ExchangeCode(ctx, referer, code)
 	if err != nil {
 		log.Println("exchange error:", err)
 		respondWithError(w, http.StatusInternalServerError, "token exchange failed")
@@ -37,7 +41,7 @@ func (api *apiConfig) HandleAmoAuthCallback(w http.ResponseWriter, r *http.Reque
 	}
 
 	acc := &domain.Account{
-		ID:           api.amoClient.BaseDomain(),
+		ID:           referer,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 		Expires:      tokens.ExpiresAt,
