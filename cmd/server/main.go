@@ -4,35 +4,31 @@ import (
 	"log"
 	"net/http"
 
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/in_memory"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-
+	_ = godotenv.Load()
 	const port = "8080"
 
 	repo := in_memory.NewMemoryRepository()
-
 	accountUC := usecase.NewAccountUsecase(repo)
 	integrationUC := usecase.NewIntegrationUsecase(repo)
 
-	apiCfg := api.NewAPI(accountUC, integrationUC)
+	amoClient, err := amocrm.NewOAuthClientFromEnv()
+	if err != nil {
+		log.Fatalf("cannot init amo oauth client: %v", err)
+	}
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("POST /accounts", apiCfg.HandlerCreateAccount)
-	mux.HandleFunc("GET /accounts", apiCfg.HandleGetAllAccounts)
-	mux.HandleFunc("DELETE /accounts", apiCfg.HandlrDeleteAccount)
-	mux.HandleFunc("PUT /accounts", apiCfg.HandleUpdateAccount)
-
-	mux.HandleFunc("POST /integrations", apiCfg.HandleCreateIntegration)
-	mux.HandleFunc("GET /integrations", apiCfg.HandleGetIntegrations)
+	handler := api.New(accountUC, integrationUC, amoClient)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
-		Handler: mux,
+		Handler: handler,
 	}
 
 	log.Printf("Serving on port: %s\n", port)
