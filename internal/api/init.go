@@ -14,11 +14,7 @@ type apiConfig struct {
 	amoClient     *amocrm.OAuthClient
 }
 
-func New(
-	accountUC usecase.AccountUsecase,
-	integrationUC usecase.IntegrationUsecase,
-	amoClient *amocrm.OAuthClient,
-) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, amoClient *amocrm.OAuthClient) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,
@@ -47,7 +43,8 @@ func New(
 	mux.HandleFunc("GET /amo/auth/start", apiCfg.HandleAmoAuthStart)
 	mux.HandleFunc("GET /amo/oauth/callback", apiCfg.HandleAmoAuthCallback)
 
-=======
+	mux.HandleFunc("GET /amo/contacts", apiCfg.HandleAmoGetContacts)
+
 
 	return mux
 }

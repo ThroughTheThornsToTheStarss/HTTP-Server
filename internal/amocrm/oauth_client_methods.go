@@ -9,16 +9,24 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"strings"
 )
 
+func normalizeBaseDomain(baseDomain string) string {
+    baseDomain = strings.TrimSpace(baseDomain)
+    baseDomain = strings.TrimRight(baseDomain, "/")
 
-func (c *OAuthClient) AuthURL(state string) string {
+    if !strings.HasPrefix(baseDomain, "http://") && !strings.HasPrefix(baseDomain, "https://") {
+        baseDomain = "https://" + baseDomain
+    }
+
+    return baseDomain
+}
+
+func (c *OAuthClient) AuthURL() string {
+	
 	values := url.Values{}
 	values.Set("client_id", c.clientID)
-	if state != "" {
-		values.Set("state", state)
-	}
-
 	values.Set("mode", "post_message")
 	values.Set("redirect_uri", c.redirectURI)
 
@@ -27,35 +35,30 @@ func (c *OAuthClient) AuthURL(state string) string {
 }
 
 
-func (c *OAuthClient) ExchangeCode(ctx context.Context, code string) (Tokens, error) {
-	body := map[string]any{
-		"client_id":     c.clientID,
-		"client_secret": c.clientSecret,
-		"grant_type":    "authorization_code",
-		"code":          code,
-		"redirect_uri":  c.redirectURI,
-	}
+func (c *OAuthClient) ExchangeCode(ctx context.Context, baseDomain, code string) (Tokens, error) {
+    baseDomain = normalizeBaseDomain(baseDomain)
 
-	return c.sendTokenRequest(ctx, body)
+    body := map[string]any{
+        "client_id":     c.clientID,
+        "client_secret": c.clientSecret,
+        "grant_type":    "authorization_code",
+        "code":          code,
+        "redirect_uri":  c.redirectURI,
+    }
+
+    return c.sendTokenRequest(ctx, baseDomain, body)
 }
 
-
-func (c *OAuthClient) BaseDomain() string {
-	return c.baseDomain
-}
-
-
-func (c *OAuthClient) sendTokenRequest(ctx context.Context, body map[string]any) (Tokens, error) {
+func (c *OAuthClient) sendTokenRequest(ctx context.Context, baseDomain string, body map[string]any) (Tokens, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return Tokens{}, err
 	}
 
-
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		c.baseDomain+"/oauth2/access_token",
+		baseDomain+"/oauth2/access_token",
 		bytes.NewReader(data),
 	)
 	if err != nil {
