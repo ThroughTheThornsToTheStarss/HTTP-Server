@@ -17,15 +17,19 @@ func main() {
 	_ = godotenv.Load()
 	const port = "8080"
 
+
 	db, err := mysql.ConnectFromEnv()
 	if err != nil {
 		log.Fatalf("mysql connect error: %v", err)
 	}
 	defer db.Close()
 
+
+
 	repo := in_memory.NewMemoryRepository()
 	accountUC := usecase.NewAccountUsecase(repo)
 	integrationUC := usecase.NewIntegrationUsecase(repo)
+
 
 	amoClient, err := amocrm.NewOAuthClientFromEnv()
 	if err != nil {
@@ -36,6 +40,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":" + port,
+
 		Handler: handler,
 	}
 
