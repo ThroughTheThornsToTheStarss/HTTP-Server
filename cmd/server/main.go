@@ -6,10 +6,9 @@ import (
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/in_memory"
+	mysqlrepo "git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/mysql"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
-	"git.amocrm.ru/ilnasertdinov/http-server-go/pkg/mysql"
-
+	mysqlcfg "git.amocrm.ru/ilnasertdinov/http-server-go/pkg/mysql"
 	"github.com/joho/godotenv"
 )
 
@@ -18,17 +17,26 @@ func main() {
 	const port = "8080"
 
 
-	db, err := mysql.ConnectFromEnv()
+	db, err := mysqlcfg.NewGormFromEnv()
+
 	if err != nil {
 		log.Fatalf("mysql connect error: %v", err)
 	}
-	defer db.Close()
+
+
+	if err := mysqlrepo.AutoMigrate(db); err != nil {
+		log.Fatalf("mysql automigrate error: %v", err)
+	}
+
+	repo := mysqlrepo.NewGormRepository(db)
 
 
 
-	repo := in_memory.NewMemoryRepository()
+
+
 	accountUC := usecase.NewAccountUsecase(repo)
 	integrationUC := usecase.NewIntegrationUsecase(repo)
+	contactsUC := usecase.NewContactsUsecase(repo)
 
 
 	amoClient, err := amocrm.NewOAuthClientFromEnv()
@@ -36,7 +44,7 @@ func main() {
 		log.Fatalf("cannot init amo oauth client: %v", err)
 	}
 
-	handler := api.New(accountUC, integrationUC, amoClient)
+	handler := api.New(accountUC, integrationUC, contactsUC, amoClient)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

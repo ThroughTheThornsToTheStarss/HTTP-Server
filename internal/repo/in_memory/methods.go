@@ -66,3 +66,27 @@ func (r *MemoryRepository) UpdateAccount(acc *domain.Account) error {
 	r.accounts[acc.ID] = acc
 	return nil
 }
+
+func (r *MemoryRepository) SaveContacts(accountID string, contacts []*domain.Contact) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	cp := make([]*domain.Contact, len(contacts))
+	copy(cp, contacts)
+	r.contacts[accountID] = cp
+	return nil
+}
+
+func (r *MemoryRepository) GetContactsByAccountID(accountID string) ([]*domain.Contact, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	src := r.contacts[accountID]
+	if src == nil {
+		return []*domain.Contact{}, nil
+	}
+
+	cp := make([]*domain.Contact, len(src))
+	copy(cp, src)
+	return cp, nil
+}

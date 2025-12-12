@@ -3,6 +3,8 @@ package api
 import (
 	"log"
 	"net/http"
+
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
 
 type contactResponse struct {
@@ -11,7 +13,6 @@ type contactResponse struct {
 }
 
 func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Request) {
-
 	ctx := r.Context()
 
 	accounts, err := api.accountUC.GetAllAccounts()
@@ -35,18 +36,33 @@ func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	resp := make([]contactResponse, 0, len(amoContacts))
-
+	contacts := make([]*domain.Contact, 0, len(amoContacts))
 	for _, c := range amoContacts {
-		item := contactResponse{
-			Name: c.Name,
-		}
-		item.Email = nil
+		var emailPtr *string
 		if email, ok := c.PrimaryEmail(); ok {
-			item.Email = &email
+			emailCopy := email
+			emailPtr = &emailCopy
 		}
 
-		resp = append(resp, item)
+		contacts = append(contacts, &domain.Contact{
+			AccountID: acc.ID,
+			Name:      c.Name,
+			Email:     emailPtr,
+		})
+	}
+
+	if err := api.contactsUC.SaveContacts(acc.ID, contacts); err != nil {
+		log.Println("save contacts error:", err)
+		respondWithError(w, http.StatusInternalServerError, "cannot save contacts")
+		return
+	}
+
+	resp := make([]contactResponse, 0, len(contacts))
+	for _, c := range contacts {
+		resp = append(resp, contactResponse{
+			Name:  c.Name,
+			Email: c.Email,
+		})
 	}
 
 	respondWithJSON(w, http.StatusOK, resp)

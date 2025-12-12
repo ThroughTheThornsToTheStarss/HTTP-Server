@@ -1,10 +1,11 @@
 package mysql
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
-	"time"
+
+	gormmysql "gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func LoadConfigFromEnv() Config {
@@ -17,14 +18,18 @@ func LoadConfigFromEnv() Config {
 	}
 }
 
-func ConnectFromEnv() (*DB, error) {
-	cfg := LoadConfigFromEnv()
-	return connectWithRetry(cfg)
+func getenv(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
 }
 
-func connectWithRetry(cfg Config) (*DB, error) {
+func NewGormFromEnv() (*gorm.DB, error) {
+	cfg := LoadConfigFromEnv()
+
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&collation=utf8mb4_unicode_ci&loc=Local",
 		cfg.User,
 		cfg.Password,
 		cfg.Host,
@@ -32,46 +37,10 @@ func connectWithRetry(cfg Config) (*DB, error) {
 		cfg.Name,
 	)
 
-	const (
-		maxAttempts  = 10
-		sleepBetween = time.Second
-	)
-
-	var (
-		db  *sql.DB
-		err error
-	)
-
-	for i := 1; i <= maxAttempts; i++ {
-		db, err = sql.Open("mysql", dsn)
-		if err != nil {
-			fmt.Printf("mysql open attempt %d failed: %v\n", i, err)
-		} else if err = db.Ping(); err != nil {
-			fmt.Printf("mysql ping attempt %d failed: %v\n", i, err)
-		} else {
-			fmt.Printf("Connected to MySQL at %s:%s, db=%s\n", cfg.Host, cfg.Port, cfg.Name)
-			db.SetMaxOpenConns(10)
-			db.SetMaxIdleConns(5)
-			db.SetConnMaxLifetime(time.Hour)
-			return &DB{DB: db}, nil
-		}
-
-		time.Sleep(sleepBetween)
+	db, err := gorm.Open(gormmysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("mysql connect failed after %d attempts: %w", maxAttempts, err)
-}
-
-func (db *DB) Close() error {
-	if db == nil || db.DB == nil {
-		return nil
-	}
-	return db.DB.Close()
-}
-
-func getenv(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
+	return db, nil
 }

@@ -4,10 +4,11 @@ services:
   app:
     build: .
     container_name: go-http-server
+    restart: unless-stopped
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8080:8080" 
     depends_on:
       - fullstack-mysql
     networks:
@@ -22,8 +23,6 @@ services:
       MYSQL_PASSWORD: ${db_password}
       MYSQL_DATABASE: ${db_name}
       MYSQL_ROOT_PASSWORD: ${db_password}
-    ports:
-      - "3306:3306"
     volumes:
       - database_mysql:/var/lib/mysql
     networks:

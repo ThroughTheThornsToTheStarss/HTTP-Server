@@ -18,7 +18,6 @@ func (c Contact) PrimaryEmail() (string, bool) {
 	return "", false
 }
 
-
 func (c *OAuthClient) getContactsPage(ctx context.Context, baseDomain string, accessToken string, page, limit int) ([]Contact, error) {
 	var result contactsPage
 
@@ -39,7 +38,7 @@ func (c *OAuthClient) getContactsPage(ctx context.Context, baseDomain string, ac
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Bearer " + accessToken)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.httpClient.Do(req)
