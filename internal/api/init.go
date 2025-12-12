@@ -6,17 +6,23 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 )
+type contactResponse struct {
+	Name  string  `json:"name"`
+	Email *string `json:"email"`
+}
 
 type apiConfig struct {
 	accountUC     usecase.AccountUsecase
 	integrationUC usecase.IntegrationUsecase
+	contactsUC    usecase.ContactsUsecase
 	amoClient     *amocrm.OAuthClient
 }
 
-func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, amoClient *amocrm.OAuthClient) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,
+		contactsUC:    contactsUC,
 		amoClient:     amoClient,
 	}
 

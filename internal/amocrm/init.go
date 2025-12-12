@@ -18,6 +18,7 @@ type Tokens struct {
 	AccessToken  string
 	RefreshToken string
 	TokenType    string
+	ExpiresIn    int64
 	ExpiresAt    int64
 }
 
@@ -49,17 +50,17 @@ func NewOAuthClientFromEnv() (*OAuthClient, error) {
 }
 
 type Contact struct {
-	ID                int64                `json:"id"`
-	Name              string               `json:"name"`
-	ResponsibleUserID int64                `json:"responsible_user_id"`
-	AccountID         int64                `json:"account_id"`
-	CustomFields      []CustomFieldValues  `json:"custom_fields_values"`
+	ID                int64               `json:"id"`
+	Name              string              `json:"name"`
+	ResponsibleUserID int64               `json:"responsible_user_id"`
+	AccountID         int64               `json:"account_id"`
+	CustomFields      []CustomFieldValues `json:"custom_fields_values"`
 }
 
 type CustomFieldValues struct {
 	FieldID   int64                 `json:"field_id"`
 	FieldName string                `json:"field_name"`
-	FieldCode string                `json:"field_code"` 
+	FieldCode string                `json:"field_code"`
 	Values    []CustomFieldValueVal `json:"values"`
 }
 
@@ -72,4 +73,8 @@ type contactsPage struct {
 	Embedded struct {
 		Contacts []Contact `json:"contacts"`
 	} `json:"_embedded"`
+}
+
+type AccountInfo struct {
+	ID uint64 `json:"id"`
 }

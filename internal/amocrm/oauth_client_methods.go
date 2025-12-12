@@ -8,45 +8,42 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"time"
 	"strings"
+	"time"
 )
 
 func normalizeBaseDomain(baseDomain string) string {
-    baseDomain = strings.TrimSpace(baseDomain)
-    baseDomain = strings.TrimRight(baseDomain, "/")
+	baseDomain = strings.TrimSpace(baseDomain)
+	baseDomain = strings.TrimRight(baseDomain, "/")
 
-    if !strings.HasPrefix(baseDomain, "http://") && !strings.HasPrefix(baseDomain, "https://") {
-        baseDomain = "https://" + baseDomain
-    }
+	if !strings.HasPrefix(baseDomain, "http://") && !strings.HasPrefix(baseDomain, "https://") {
+		baseDomain = "https://" + baseDomain
+	}
 
-    return baseDomain
+	return baseDomain
 }
 
 func (c *OAuthClient) AuthURL() string {
-	
+
 	values := url.Values{}
 	values.Set("client_id", c.clientID)
 	values.Set("mode", "post_message")
-	values.Set("redirect_uri", c.redirectURI)
-
 
 	return fmt.Sprintf("%s/oauth?%s", c.baseDomain, values.Encode())
 }
 
-
 func (c *OAuthClient) ExchangeCode(ctx context.Context, baseDomain, code string) (Tokens, error) {
-    baseDomain = normalizeBaseDomain(baseDomain)
+	baseDomain = normalizeBaseDomain(baseDomain)
 
-    body := map[string]any{
-        "client_id":     c.clientID,
-        "client_secret": c.clientSecret,
-        "grant_type":    "authorization_code",
-        "code":          code,
-        "redirect_uri":  c.redirectURI,
-    }
+	body := map[string]any{
+		"client_id":     c.clientID,
+		"client_secret": c.clientSecret,
+		"grant_type":    "authorization_code",
+		"code":          code,
+		"redirect_uri":  c.redirectURI,
+	}
 
-    return c.sendTokenRequest(ctx, baseDomain, body)
+	return c.sendTokenRequest(ctx, baseDomain, body)
 }
 
 func (c *OAuthClient) sendTokenRequest(ctx context.Context, baseDomain string, body map[string]any) (Tokens, error) {
@@ -86,6 +83,7 @@ func (c *OAuthClient) sendTokenRequest(ctx context.Context, baseDomain string, b
 		AccessToken:  tr.AccessToken,
 		RefreshToken: tr.RefreshToken,
 		TokenType:    tr.TokenType,
+		ExpiresIn:    tr.ExpiresIn,    
 		ExpiresAt:    time.Now().Unix() + tr.ExpiresIn,
 	}, nil
 }
