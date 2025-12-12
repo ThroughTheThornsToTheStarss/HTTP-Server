@@ -10,13 +10,15 @@ import (
 type apiConfig struct {
 	accountUC     usecase.AccountUsecase
 	integrationUC usecase.IntegrationUsecase
+	contactsUC    usecase.ContactsUsecase
 	amoClient     *amocrm.OAuthClient
 }
 
-func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, amoClient *amocrm.OAuthClient) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,
+		contactsUC:    contactsUC,
 		amoClient:     amoClient,
 	}
 

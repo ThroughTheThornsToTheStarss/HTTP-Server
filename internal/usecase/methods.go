@@ -27,3 +27,11 @@ func (u *integrationUsecase) CreateIntegration(in *domain.Integration) error {
 func (u *integrationUsecase) GetIntegrationsByAccountID(accountID string) ([]*domain.Integration, error) {
 	return u.repo.GetIntegrationsByAccountID(accountID)
 }
+
+func (u *contactsUsecase) SaveContacts(accountID string, contacts []*domain.Contact) error {
+	return u.repo.SaveContacts(accountID, contacts)
+}
+
+func (u *contactsUsecase) GetContactsByAccountID(accountID string) ([]*domain.Contact, error) {
+	return u.repo.GetContactsByAccountID(accountID)
+}
