@@ -7,7 +7,6 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
 
-
 func (api *apiConfig) HandleAmoAuthStart(w http.ResponseWriter, r *http.Request) {
 	authURL := api.amoClient.AuthURL()
 	http.Redirect(w, r, authURL, http.StatusFound)
@@ -23,7 +22,7 @@ func (api *apiConfig) HandleAmoAuthCallback(w http.ResponseWriter, r *http.Reque
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		respondWithError(w, http.StatusBadRequest, "code is missing")
+		respondWithError(w, http.StatusBadRequest, "codce is missing")
 		return
 	}
 
@@ -40,11 +39,20 @@ func (api *apiConfig) HandleAmoAuthCallback(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	info, err := api.amoClient.GetAccountInfo(ctx, referer, tokens.AccessToken)
+	if err != nil {
+		log.Println("get account info error:", err)
+		respondWithError(w, http.StatusInternalServerError, "cannot get account info")
+		return
+	}
+
 	acc := &domain.Account{
-		ID:           referer,
+		ID:           info.ID,
+		Referer:      referer,
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		Expires:      tokens.ExpiresAt,
+		TokenType:    tokens.TokenType,
+		ExpiresIn:    tokens.ExpiresIn,
 	}
 
 	if err := api.accountUC.CreateAccount(acc); err != nil {

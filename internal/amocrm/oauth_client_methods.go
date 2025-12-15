@@ -28,7 +28,6 @@ func (c *OAuthClient) AuthURL() string {
 	values := url.Values{}
 	values.Set("client_id", c.clientID)
 	values.Set("mode", "post_message")
-	values.Set("redirect_uri", c.redirectURI)
 
 	return fmt.Sprintf("%s/oauth?%s", c.baseDomain, values.Encode())
 }
@@ -84,6 +83,7 @@ func (c *OAuthClient) sendTokenRequest(ctx context.Context, baseDomain string, b
 		AccessToken:  tr.AccessToken,
 		RefreshToken: tr.RefreshToken,
 		TokenType:    tr.TokenType,
+		ExpiresIn:    tr.ExpiresIn,    
 		ExpiresAt:    time.Now().Unix() + tr.ExpiresIn,
 	}, nil
 }

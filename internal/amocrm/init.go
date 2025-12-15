@@ -18,6 +18,7 @@ type Tokens struct {
 	AccessToken  string
 	RefreshToken string
 	TokenType    string
+	ExpiresIn    int64
 	ExpiresAt    int64
 }
 
@@ -72,4 +73,8 @@ type contactsPage struct {
 	Embedded struct {
 		Contacts []Contact `json:"contacts"`
 	} `json:"_embedded"`
+}
+
+type AccountInfo struct {
+	ID uint64 `json:"id"`
 }

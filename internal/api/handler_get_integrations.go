@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 )
 
 func (api *apiConfig) HandleGetIntegrations(w http.ResponseWriter, r *http.Request) {
@@ -12,7 +13,13 @@ func (api *apiConfig) HandleGetIntegrations(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	list, err := api.integrationUC.GetIntegrationsByAccountID(accountID)
+	accountIDInt, err := strconv.ParseUint(accountID, 10, 64)
+	if err != nil || accountIDInt == 0 {
+		respondWithError(w, http.StatusBadRequest, "account_id must be a positive integer")
+		return
+	}
+
+	list, err := api.integrationUC.GetIntegrationsByAccountID(accountIDInt)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot get integrations")
 		return

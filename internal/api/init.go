@@ -7,6 +7,10 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 )
+type contactResponse struct {
+	Name  string  `json:"name"`
+	Email *string `json:"email"`
+}
 
 type apiConfig struct {
 	accountUC     usecase.AccountUsecase

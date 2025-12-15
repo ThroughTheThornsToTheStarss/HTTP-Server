@@ -7,7 +7,6 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
 
-
 func (api *apiConfig) HandleCreateIntegration(w http.ResponseWriter, r *http.Request) {
 	var in domain.Integration
 
@@ -16,7 +15,7 @@ func (api *apiConfig) HandleCreateIntegration(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if in.AccountID == "" {
+	if in.AccountID == 0 {
 		respondWithError(w, http.StatusBadRequest, "account_id is required")
 		return
 	}

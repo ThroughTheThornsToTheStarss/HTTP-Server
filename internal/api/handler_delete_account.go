@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 )
 
 func (api *apiConfig) HandleDeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,13 @@ func (api *apiConfig) HandleDeleteAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := api.accountUC.DeleteAccount(accountID)
+	accountIDInt, err := strconv.ParseUint(accountID, 10, 64)
+	if err != nil || accountIDInt == 0 {
+		respondWithError(w, http.StatusBadRequest, "account_id must be a positive integer")
+		return
+	}
+
+	err = api.accountUC.DeleteAccount(accountIDInt)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "cannot delete account")
 		return

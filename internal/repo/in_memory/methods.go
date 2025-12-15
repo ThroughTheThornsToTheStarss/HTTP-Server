@@ -6,7 +6,6 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
 
-
 func (r *MemoryRepository) CreateAccount(acc *domain.Account) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -34,7 +33,7 @@ func (r *MemoryRepository) CreateIntegration(in *domain.Integration) error {
 	return nil
 }
 
-func (r *MemoryRepository) GetIntegrationsByAccountID(accountID string) ([]*domain.Integration, error) {
+func (r *MemoryRepository) GetIntegrationsByAccountID(accountID uint64) ([]*domain.Integration, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -46,7 +45,7 @@ func (r *MemoryRepository) GetIntegrationsByAccountID(accountID string) ([]*doma
 	return list, nil
 }
 
-func (r *MemoryRepository) DeleteAccount(accountID string) error {
+func (r *MemoryRepository) DeleteAccount(accountID uint64) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -60,14 +59,14 @@ func (r *MemoryRepository) UpdateAccount(acc *domain.Account) error {
 	defer r.mu.Unlock()
 
 	if _, ok := r.accounts[acc.ID]; !ok {
-		return fmt.Errorf("account with id %s not found", acc.ID)
+		return fmt.Errorf("account with id %d not found", acc.ID)
 	}
 
 	r.accounts[acc.ID] = acc
 	return nil
 }
 
-func (r *MemoryRepository) SaveContacts(accountID string, contacts []*domain.Contact) error {
+func (r *MemoryRepository) SaveContacts(accountID uint64, contacts []*domain.Contact) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -77,7 +76,7 @@ func (r *MemoryRepository) SaveContacts(accountID string, contacts []*domain.Con
 	return nil
 }
 
-func (r *MemoryRepository) GetContactsByAccountID(accountID string) ([]*domain.Contact, error) {
+func (r *MemoryRepository) GetContactsByAccountID(accountID uint64) ([]*domain.Contact, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

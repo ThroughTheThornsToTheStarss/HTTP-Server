@@ -16,28 +16,19 @@ func main() {
 	_ = godotenv.Load()
 	const port = "8080"
 
-
 	db, err := mysqlcfg.NewGormFromEnv()
-
 	if err != nil {
 		log.Fatalf("mysql connect error: %v", err)
 	}
-
 
 	if err := mysqlrepo.AutoMigrate(db); err != nil {
 		log.Fatalf("mysql automigrate error: %v", err)
 	}
 
 	repo := mysqlrepo.NewGormRepository(db)
-
-
-
-
-
 	accountUC := usecase.NewAccountUsecase(repo)
 	integrationUC := usecase.NewIntegrationUsecase(repo)
 	contactsUC := usecase.NewContactsUsecase(repo)
-
 
 	amoClient, err := amocrm.NewOAuthClientFromEnv()
 	if err != nil {

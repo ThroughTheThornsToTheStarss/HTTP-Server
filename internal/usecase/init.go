@@ -8,13 +8,14 @@ import (
 type AccountUsecase interface {
 	CreateAccount(acc *domain.Account) error
 	GetAllAccounts() ([]*domain.Account, error)
-	DeleteAccount(accountID string) error
+	GetAccountByID(accountID uint64) (*domain.Account, error)
+	DeleteAccount(accountID uint64) error
 	UpdateAccount(acc *domain.Account) error
 }
 
 type IntegrationUsecase interface {
 	CreateIntegration(in *domain.Integration) error
-	GetIntegrationsByAccountID(accountID string) ([]*domain.Integration, error)
+	GetIntegrationsByAccountID(accountID uint64) ([]*domain.Integration, error)
 }
 
 type accountUsecase struct {
@@ -34,8 +35,8 @@ func NewIntegrationUsecase(r repo.Repository) IntegrationUsecase {
 }
 
 type ContactsUsecase interface {
-	SaveContacts(accountID string, contacts []*domain.Contact) error
-	GetContactsByAccountID(accountID string) ([]*domain.Contact, error)
+	SaveContacts(accountID uint64, contacts []*domain.Contact) error
+	GetContactsByAccountID(accountID uint64) ([]*domain.Contact, error)
 }
 
 type contactsUsecase struct {

@@ -16,7 +16,7 @@ func (api *apiConfig) HandlerCreateAccount(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if acc.ID == "" {
+	if acc.ID == 0 {
 		respondWithError(w, http.StatusBadRequest, "account_id is required")
 		return
 	}

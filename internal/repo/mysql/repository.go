@@ -1,9 +1,12 @@
 package mysql
 
 import (
+	"errors"
+
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var _ repo.Repository = (*GormRepository)(nil)
@@ -18,7 +21,17 @@ func NewGormRepository(db *gorm.DB) *GormRepository {
 
 func (r *GormRepository) CreateAccount(acc *domain.Account) error {
 	model := accountToModel(acc)
-	return r.db.Create(&model).Error
+
+	return r.db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"referer",
+			"access_token",
+			"refresh_token",
+			"token_type",
+			"expires_in",
+		}),
+	}).Create(&model).Error
 }
 
 func (r *GormRepository) GetAllAccounts() ([]*domain.Account, error) {
@@ -34,17 +47,31 @@ func (r *GormRepository) GetAllAccounts() ([]*domain.Account, error) {
 	return res, nil
 }
 
-func (r *GormRepository) DeleteAccount(accountID string) error {
-	return r.db.Where("id = ?", accountID).Delete(&Account{}).Error
+func (r *GormRepository) GetAccountByID(accountID uint64) (*domain.Account, error) {
+	var m Account
+	if err := r.db.First(&m, "id = ?", accountID).Error; err != nil {
+		return nil, err
+	}
+	return accountFromModel(&m), nil
+}
+
+func (r *GormRepository) DeleteAccount(accountID uint64) error {
+	return r.db.Delete(&Account{}, "id = ?", accountID).Error
 }
 
 func (r *GormRepository) UpdateAccount(acc *domain.Account) error {
+	if acc == nil {
+		return errors.New("nil account")
+	}
+
 	return r.db.Model(&Account{}).
 		Where("id = ?", acc.ID).
 		Updates(map[string]any{
+			"referer":       acc.Referer,
 			"access_token":  acc.AccessToken,
 			"refresh_token": acc.RefreshToken,
-			"expires":       acc.Expires,
+			"token_type":    acc.TokenType,
+			"expires_in":    acc.ExpiresIn,
 		}).Error
 }
 
@@ -53,11 +80,9 @@ func (r *GormRepository) CreateIntegration(in *domain.Integration) error {
 	return r.db.Create(&model).Error
 }
 
-func (r *GormRepository) GetIntegrationsByAccountID(accountID string) ([]*domain.Integration, error) {
+func (r *GormRepository) GetIntegrationsByAccountID(accountID uint64) ([]*domain.Integration, error) {
 	var models []Integration
-	if err := r.db.
-		Where("account_id = ?", accountID).
-		Find(&models).Error; err != nil {
+	if err := r.db.Where("account_id = ?", accountID).Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -68,15 +93,51 @@ func (r *GormRepository) GetIntegrationsByAccountID(accountID string) ([]*domain
 	return res, nil
 }
 
+func (r *GormRepository) SaveContacts(accountID uint64, contacts []*domain.Contact) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("account_id = ?", accountID).Delete(&Contact{}).Error; err != nil {
+			return err
+		}
+		if len(contacts) == 0 {
+			return nil
+		}
+
+		models := make([]Contact, 0, len(contacts))
+		for _, c := range contacts {
+			models = append(models, Contact{
+				AccountID: accountID,
+				Name:      c.Name,
+				Email:     c.Email,
+			})
+		}
+		return tx.Create(&models).Error
+	})
+}
+
+func (r *GormRepository) GetContactsByAccountID(accountID uint64) ([]*domain.Contact, error) {
+	var models []Contact
+	if err := r.db.Where("account_id = ?", accountID).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	res := make([]*domain.Contact, 0, len(models))
+	for _, m := range models {
+		res = append(res, contactFromModel(&m))
+	}
+	return res, nil
+}
+
 func accountToModel(a *domain.Account) Account {
 	if a == nil {
 		return Account{}
 	}
 	return Account{
 		ID:           a.ID,
+		Referer:      a.Referer,
 		AccessToken:  a.AccessToken,
 		RefreshToken: a.RefreshToken,
-		Expires:      a.Expires,
+		TokenType:    a.TokenType,
+		ExpiresIn:    a.ExpiresIn,
 	}
 }
 
@@ -86,9 +147,11 @@ func accountFromModel(m *Account) *domain.Account {
 	}
 	return &domain.Account{
 		ID:           m.ID,
+		Referer:      m.Referer,
 		AccessToken:  m.AccessToken,
 		RefreshToken: m.RefreshToken,
-		Expires:      m.Expires,
+		TokenType:    m.TokenType,
+		ExpiresIn:    m.ExpiresIn,
 	}
 }
 
@@ -116,43 +179,6 @@ func integrationFromModel(m *Integration) *domain.Integration {
 		RedirectURL:        m.RedirectURL,
 		AuthenticationCode: m.AuthenticationCode,
 	}
-}
-
-func (r *GormRepository) SaveContacts(accountID string, contacts []*domain.Contact) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("account_id = ?", accountID).Delete(&Contact{}).Error; err != nil {
-			return err
-		}
-
-		if len(contacts) == 0 {
-			return nil
-		}
-
-		models := make([]Contact, 0, len(contacts))
-		for _, c := range contacts {
-			models = append(models, Contact{
-				AccountID: accountID,
-				Name:      c.Name,
-				Email:     c.Email,
-			})
-		}
-
-		return tx.Create(&models).Error
-	})
-}
-
-func (r *GormRepository) GetContactsByAccountID(accountID string) ([]*domain.Contact, error) {
-	var models []Contact
-	if err := r.db.Where("account_id = ?", accountID).Find(&models).Error; err != nil {
-		return nil, err
-	}
-
-	res := make([]*domain.Contact, 0, len(models))
-	for _, m := range models {
-		res = append(res, contactFromModel(&m))
-	}
-
-	return res, nil
 }
 
 func contactFromModel(m *Contact) *domain.Contact {

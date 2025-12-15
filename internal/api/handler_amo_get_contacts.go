@@ -3,33 +3,36 @@ package api
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
 
-type contactResponse struct {
-	Name  string  `json:"name"`
-	Email *string `json:"email"`
-}
 
 func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	accounts, err := api.accountUC.GetAllAccounts()
+	accountIDStr := r.URL.Query().Get("account_id")
+
+	if accountIDStr == "" {
+		respondWithError(w, http.StatusBadRequest, "account_id is required")
+		return
+	}
+
+	accountID, err := strconv.ParseUint(accountIDStr, 10, 64)
 	if err != nil {
-		log.Println("get accounts error:", err)
-		respondWithError(w, http.StatusInternalServerError, "cannot load accounts")
+		respondWithError(w, http.StatusBadRequest, "invalid account_id")
 		return
 	}
 
-	if len(accounts) == 0 {
-		respondWithError(w, http.StatusBadRequest, "no authorized amo accounts")
+	acc, err := api.accountUC.GetAccountByID(accountID)
+	if err != nil {
+		log.Println("get account error:", err)
+		respondWithError(w, http.StatusNotFound, "account not found")
 		return
 	}
 
-	acc := accounts[0]
-
-	amoContacts, err := api.amoClient.GetAllContacts(ctx, acc.ID, acc.AccessToken)
+	amoContacts, err := api.amoClient.GetAllContacts(ctx, acc.Referer, acc.AccessToken)
 	if err != nil {
 		log.Println("amo get all contacts error:", err)
 		respondWithError(w, http.StatusInternalServerError, "cannot fetch contacts from amo")
