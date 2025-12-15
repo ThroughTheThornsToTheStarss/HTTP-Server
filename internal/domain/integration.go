@@ -6,4 +6,5 @@ type Integration struct {
 	ClientID           string `json:"client_id"`
 	RedirectURL        string `json:"redirect_url"`
 	AuthenticationCode string `json:"authentication_code"`
+	UnisenderKey string `json:"unisender_key"`
 }

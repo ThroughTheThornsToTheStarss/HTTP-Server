@@ -21,14 +21,15 @@ type Account struct {
 
 type Integration struct {
 	ID                 uint   `gorm:"primaryKey;autoIncrement"`
-	AccountID          uint64 `gorm:"index;not null"`
+	AccountID          uint64 `gorm:"not null;uniqueIndex"`
 	SecretKey          string
 	ClientID           string
 	RedirectURL        string
 	AuthenticationCode string
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	UnisenderKey string `gorm:"type:text"`
 }
 
 type Contact struct {
