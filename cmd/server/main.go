@@ -1,47 +1,48 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
-	mysqlrepo "git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/mysql"
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
-	mysqlcfg "git.amocrm.ru/ilnasertdinov/http-server-go/pkg/mysql"
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/app"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	_ = godotenv.Load()
-	const port = "8080"
 
-	db, err := mysqlcfg.NewGormFromEnv()
+	a, err := app.NewFromEnv()
 	if err != nil {
-		log.Fatalf("mysql connect error: %v", err)
+		log.Fatal(err)
 	}
 
-	if err := mysqlrepo.AutoMigrate(db); err != nil {
-		log.Fatalf("mysql automigrate error: %v", err)
-	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
-	repo := mysqlrepo.NewGormRepository(db)
-	accountUC := usecase.NewAccountUsecase(repo)
-	integrationUC := usecase.NewIntegrationUsecase(repo)
-	contactsUC := usecase.NewContactsUsecase(repo)
+	go func() {
+		log.Printf("HTTP server on :%s", a.HTTPPort)
+		if err := a.HTTPServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("http error: %v", err)
+		}
+	}()
 
-	amoClient, err := amocrm.NewOAuthClientFromEnv()
-	if err != nil {
-		log.Fatalf("cannot init amo oauth client: %v", err)
-	}
+	go func() {
+		log.Printf("gRPC server on :%s", a.GRPCPort)
+		if err := a.GRPCHandler.Run(); err != nil {
+			log.Printf("grpc error: %v", err)
+		}
+	}()
 
-	handler := api.New(accountUC, integrationUC, contactsUC, amoClient)
+	<-ctx.Done()
 
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: handler,
-	}
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	log.Printf("Serving on port: %s\n", port)
-	log.Fatal(srv.ListenAndServe())
+	_ = a.HTTPServer.Shutdown(shutdownCtx)
+	a.GRPCHandler.Stop()
 }

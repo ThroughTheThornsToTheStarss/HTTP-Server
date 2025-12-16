@@ -17,6 +17,7 @@ type Account struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	IsActive  bool `gorm:"not null;default:true"`
 }
 
 type Integration struct {
