@@ -53,6 +53,7 @@ func (api *apiConfig) HandleAmoAuthCallback(w http.ResponseWriter, r *http.Reque
 		RefreshToken: tokens.RefreshToken,
 		TokenType:    tokens.TokenType,
 		ExpiresIn:    tokens.ExpiresIn,
+		IsActive:     true,
 	}
 
 	if err := api.accountUC.CreateAccount(acc); err != nil {

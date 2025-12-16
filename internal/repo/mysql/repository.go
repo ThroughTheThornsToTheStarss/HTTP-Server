@@ -21,7 +21,7 @@ func NewGormRepository(db *gorm.DB) *GormRepository {
 
 func (r *GormRepository) CreateAccount(acc *domain.Account) error {
 	model := accountToModel(acc)
-
+	model.IsActive = true
 	return r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -30,6 +30,7 @@ func (r *GormRepository) CreateAccount(acc *domain.Account) error {
 			"refresh_token",
 			"token_type",
 			"expires_in",
+			"is_active",
 		}),
 	}).Create(&model).Error
 }
@@ -56,7 +57,9 @@ func (r *GormRepository) GetAccountByID(accountID uint64) (*domain.Account, erro
 }
 
 func (r *GormRepository) DeleteAccount(accountID uint64) error {
-	return r.db.Delete(&Account{}, "id = ?", accountID).Error
+	return r.db.Model(&Account{}).
+		Where("id = ?", accountID).
+		Update("is_active", false).Error
 }
 
 func (r *GormRepository) UpdateAccount(acc *domain.Account) error {
@@ -165,6 +168,7 @@ func accountToModel(a *domain.Account) Account {
 		RefreshToken: a.RefreshToken,
 		TokenType:    a.TokenType,
 		ExpiresIn:    a.ExpiresIn,
+		IsActive:     a.IsActive,
 	}
 }
 
@@ -179,6 +183,7 @@ func accountFromModel(m *Account) *domain.Account {
 		RefreshToken: m.RefreshToken,
 		TokenType:    m.TokenType,
 		ExpiresIn:    m.ExpiresIn,
+		IsActive:     m.IsActive,
 	}
 }
 
@@ -192,7 +197,7 @@ func integrationToModel(in *domain.Integration) Integration {
 		ClientID:           in.ClientID,
 		RedirectURL:        in.RedirectURL,
 		AuthenticationCode: in.AuthenticationCode,
-		UnisenderKey: in.UnisenderKey,
+		UnisenderKey:       in.UnisenderKey,
 	}
 }
 
@@ -206,7 +211,7 @@ func integrationFromModel(m *Integration) *domain.Integration {
 		ClientID:           m.ClientID,
 		RedirectURL:        m.RedirectURL,
 		AuthenticationCode: m.AuthenticationCode,
-		UnisenderKey: m.UnisenderKey,
+		UnisenderKey:       m.UnisenderKey,
 	}
 }
 
