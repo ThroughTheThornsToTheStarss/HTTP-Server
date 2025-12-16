@@ -77,7 +77,34 @@ func (r *GormRepository) UpdateAccount(acc *domain.Account) error {
 
 func (r *GormRepository) CreateIntegration(in *domain.Integration) error {
 	model := integrationToModel(in)
-	return r.db.Create(&model).Error
+
+	var existing Integration
+	err := r.db.Where("account_id = ?", model.AccountID).First(&existing).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return r.db.Create(&model).Error
+	}
+	if err != nil {
+		return err
+	}
+
+	updates := map[string]any{}
+	if model.UnisenderKey != "" {
+		updates["unisender_key"] = model.UnisenderKey
+	}
+	if model.SecretKey != "" {
+		updates["secret_key"] = model.SecretKey
+	}
+	if model.ClientID != "" {
+		updates["client_id"] = model.ClientID
+	}
+	if model.RedirectURL != "" {
+		updates["redirect_url"] = model.RedirectURL
+	}
+	if model.AuthenticationCode != "" {
+		updates["authentication_code"] = model.AuthenticationCode
+	}
+
+	return r.db.Model(&existing).Updates(updates).Error
 }
 
 func (r *GormRepository) GetIntegrationsByAccountID(accountID uint64) ([]*domain.Integration, error) {
@@ -165,6 +192,7 @@ func integrationToModel(in *domain.Integration) Integration {
 		ClientID:           in.ClientID,
 		RedirectURL:        in.RedirectURL,
 		AuthenticationCode: in.AuthenticationCode,
+		UnisenderKey: in.UnisenderKey,
 	}
 }
 
@@ -178,6 +206,7 @@ func integrationFromModel(m *Integration) *domain.Integration {
 		ClientID:           m.ClientID,
 		RedirectURL:        m.RedirectURL,
 		AuthenticationCode: m.AuthenticationCode,
+		UnisenderKey: m.UnisenderKey,
 	}
 }
 

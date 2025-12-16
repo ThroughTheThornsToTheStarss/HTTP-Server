@@ -7,6 +7,7 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 )
+
 type contactResponse struct {
 	Name  string  `json:"name"`
 	Email *string `json:"email"`
@@ -25,8 +26,8 @@ func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsec
 		integrationUC: integrationUC,
 		contactsUC:    contactsUC,
 		amoClient:     amoClient,
-=======
-	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
+
+
 )
 
 
@@ -37,7 +38,7 @@ func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsec
 	mux.HandleFunc("GET /accounts", apiCfg.HandleGetAllAccounts)
 
 	mux.HandleFunc("DELETE /accounts", apiCfg.HandleDeleteAccount)
-=======
+
 
 
 	mux.HandleFunc("PUT /accounts", apiCfg.HandleUpdateAccount)
@@ -51,6 +52,7 @@ func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsec
 
 	mux.HandleFunc("GET /amo/contacts", apiCfg.HandleAmoGetContacts)
 
+	mux.HandleFunc("POST /integrations/unisender", apiCfg.HandleUnisenderKey)
 
 	return mux
 }
