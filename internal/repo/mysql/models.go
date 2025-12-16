@@ -17,6 +17,7 @@ type Account struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	IsActive  bool `gorm:"not null;default:true"`
 }
 
 type Integration struct {
@@ -34,11 +35,20 @@ type Integration struct {
 
 type Contact struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
-	AccountID uint64 `gorm:"index;not null"`
+	AccountID uint64 `gorm:"not null;uniqueIndex:uniq_acc_email"`
 
-	Name  string
-	Email *string
+	Name  string  `gorm:"size:255"`
+	Email *string `gorm:"size:255;uniqueIndex:uniq_acc_email"`
 
+	Status    string `gorm:"size:16;not null;default:'active'"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+type SyncHistory struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	ContactID uint   `gorm:"index;not null"`
+	Status    string `gorm:"size:16;not null"`
+	Message   string `gorm:"type:text"`
+
+	CreatedAt time.Time
 }

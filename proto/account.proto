@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./proto";
+
+service AccountService {
+  rpc DisableAccount(DisableAccountRequest) returns (DisableAccountResponse);
+}
+
+message DisableAccountRequest {
+  uint64 account_id = 1;
+}
+
+message DisableAccountResponse {
+  bool ok = 1;
+  string info = 2;
+}
+
+

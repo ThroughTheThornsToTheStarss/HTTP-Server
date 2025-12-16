@@ -7,5 +7,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&Account{},
 		&Integration{},
 		&Contact{},
+		&SyncHistory{},
 	)
 }

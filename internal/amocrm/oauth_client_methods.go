@@ -83,7 +83,7 @@ func (c *OAuthClient) sendTokenRequest(ctx context.Context, baseDomain string, b
 		AccessToken:  tr.AccessToken,
 		RefreshToken: tr.RefreshToken,
 		TokenType:    tr.TokenType,
-		ExpiresIn:    tr.ExpiresIn,    
+		ExpiresIn:    tr.ExpiresIn,
 		ExpiresAt:    time.Now().Unix() + tr.ExpiresIn,
 	}, nil
 }

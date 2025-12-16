@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"errors"
+	"strings"
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo"
@@ -21,7 +22,7 @@ func NewGormRepository(db *gorm.DB) *GormRepository {
 
 func (r *GormRepository) CreateAccount(acc *domain.Account) error {
 	model := accountToModel(acc)
-
+	model.IsActive = true
 	return r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -30,6 +31,7 @@ func (r *GormRepository) CreateAccount(acc *domain.Account) error {
 			"refresh_token",
 			"token_type",
 			"expires_in",
+			"is_active",
 		}),
 	}).Create(&model).Error
 }
@@ -56,7 +58,9 @@ func (r *GormRepository) GetAccountByID(accountID uint64) (*domain.Account, erro
 }
 
 func (r *GormRepository) DeleteAccount(accountID uint64) error {
-	return r.db.Delete(&Account{}, "id = ?", accountID).Error
+	return r.db.Model(&Account{}).
+		Where("id = ?", accountID).
+		Update("is_active", false).Error
 }
 
 func (r *GormRepository) UpdateAccount(acc *domain.Account) error {
@@ -122,22 +126,53 @@ func (r *GormRepository) GetIntegrationsByAccountID(accountID uint64) ([]*domain
 
 func (r *GormRepository) SaveContacts(accountID uint64, contacts []*domain.Contact) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("account_id = ?", accountID).Delete(&Contact{}).Error; err != nil {
+		if err := tx.Model(&Contact{}).
+			Where("account_id = ?", accountID).
+			Update("status", "deleted").Error; err != nil {
 			return err
 		}
+
 		if len(contacts) == 0 {
 			return nil
 		}
 
 		models := make([]Contact, 0, len(contacts))
+		seen := map[string]struct{}{}
+
 		for _, c := range contacts {
+			if c == nil || c.Email == nil {
+				continue
+			}
+			email := strings.TrimSpace(*c.Email)
+			if email == "" {
+				continue
+			}
+			if _, ok := seen[email]; ok {
+				continue
+			}
+			seen[email] = struct{}{}
+
+			emailCopy := email
 			models = append(models, Contact{
 				AccountID: accountID,
 				Name:      c.Name,
-				Email:     c.Email,
+				Email:     &emailCopy,
+				Status:    "active",
 			})
 		}
-		return tx.Create(&models).Error
+
+		if len(models) == 0 {
+			return nil
+		}
+
+		return tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "account_id"}, {Name: "email"}},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"name",
+				"status",
+				"updated_at",
+			}),
+		}).Create(&models).Error
 	})
 }
 
@@ -165,6 +200,7 @@ func accountToModel(a *domain.Account) Account {
 		RefreshToken: a.RefreshToken,
 		TokenType:    a.TokenType,
 		ExpiresIn:    a.ExpiresIn,
+		IsActive:     a.IsActive,
 	}
 }
 
@@ -179,6 +215,7 @@ func accountFromModel(m *Account) *domain.Account {
 		RefreshToken: m.RefreshToken,
 		TokenType:    m.TokenType,
 		ExpiresIn:    m.ExpiresIn,
+		IsActive:     m.IsActive,
 	}
 }
 
@@ -192,7 +229,7 @@ func integrationToModel(in *domain.Integration) Integration {
 		ClientID:           in.ClientID,
 		RedirectURL:        in.RedirectURL,
 		AuthenticationCode: in.AuthenticationCode,
-		UnisenderKey: in.UnisenderKey,
+		UnisenderKey:       in.UnisenderKey,
 	}
 }
 
@@ -206,7 +243,7 @@ func integrationFromModel(m *Integration) *domain.Integration {
 		ClientID:           m.ClientID,
 		RedirectURL:        m.RedirectURL,
 		AuthenticationCode: m.AuthenticationCode,
-		UnisenderKey: m.UnisenderKey,
+		UnisenderKey:       m.UnisenderKey,
 	}
 }
 
@@ -219,5 +256,6 @@ func contactFromModel(m *Contact) *domain.Contact {
 		AccountID: m.AccountID,
 		Name:      m.Name,
 		Email:     m.Email,
+		Status:    m.Status,
 	}
 }
