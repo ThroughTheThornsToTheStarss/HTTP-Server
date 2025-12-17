@@ -45,4 +45,9 @@ func main() {
 
 	_ = a.HTTPServer.Shutdown(shutdownCtx)
 	a.GRPCHandler.Stop()
+	
+	if a.Producer != nil {
+		_ = a.Producer.Close()
+	}
+
 }

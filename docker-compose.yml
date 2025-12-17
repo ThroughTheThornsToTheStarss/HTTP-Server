@@ -12,6 +12,21 @@ services:
       - "8091:8091"
     depends_on:
       - fullstack-mysql
+      - beanstalkd
+    networks:
+      - fullstack
+
+  
+  beanstalkd:
+    container_name: ddev-beanstalkd
+    image: schickling/beanstalkd
+    restart: "no"
+    expose:
+      - 11300 
+    labels:
+      com.ddev.site-name: "sitename"
+    volumes:
+    - ".:/mnt/ddev_config"
     networks:
       - fullstack
 
