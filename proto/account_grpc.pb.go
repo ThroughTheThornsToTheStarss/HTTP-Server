@@ -4,7 +4,7 @@
 // - protoc             v3.12.4
 // source: proto/account.proto
 
-package __proto
+package proto
 
 import (
 	context "context"

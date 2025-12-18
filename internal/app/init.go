@@ -8,6 +8,8 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/api"
 	grpcdelivery "git.amocrm.ru/ilnasertdinov/http-server-go/internal/grpc"
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/queue"
+	beanstalkq "git.amocrm.ru/ilnasertdinov/http-server-go/internal/queue/beanstalk"
 	mysqlrepo "git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo/mysql"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 	mysqlcfg "git.amocrm.ru/ilnasertdinov/http-server-go/pkg/mysql"
@@ -18,6 +20,7 @@ type App struct {
 	GRPCHandler *grpcdelivery.Handler
 	HTTPPort    string
 	GRPCPort    string
+	Producer    queue.Producer
 }
 
 func NewFromEnv() (*App, error) {
@@ -43,7 +46,11 @@ func NewFromEnv() (*App, error) {
 		return nil, fmt.Errorf("amo oauth client: %w", err)
 	}
 
-	handler := api.New(accountUC, integrationUC, contactsUC, amoClient)
+	producer, err := beanstalkq.New(getenv("BEANSTALK_ADDR", "beanstalkd:11300"))
+	if err != nil {
+		return nil, fmt.Errorf("beanstalk connect: %w", err)
+	}
+	handler := api.New(accountUC, integrationUC, contactsUC, amoClient, producer)
 	httpSrv := &http.Server{
 		Addr:    ":" + httpPort,
 		Handler: handler,
@@ -59,6 +66,7 @@ func NewFromEnv() (*App, error) {
 		GRPCHandler: grpcHandler,
 		HTTPPort:    httpPort,
 		GRPCPort:    grpcPort,
+		Producer:    producer,
 	}, nil
 }
 

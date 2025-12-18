@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,7 +10,6 @@ import (
 )
 
 func (api *apiConfig) HandleUnisenderKey(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if r.Method != http.MethodPost {
@@ -44,6 +44,15 @@ func (api *apiConfig) HandleUnisenderKey(w http.ResponseWriter, r *http.Request)
 	if err := api.integrationUC.CreateIntegration(in); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	if api.producer != nil {
+		jobID, err := api.producer.PushInitialSyncJob(r.Context(), accID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "cannot enqueue sync job")
+			return
+		}
+		log.Printf("beanstalk enqueued: job_id=%d account_id=%d", jobID, accID)
 	}
 
 	respondWithJSON(w, http.StatusCreated, map[string]any{"ok": true})

@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"errors"
+	"strings"
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/repo"
@@ -125,22 +126,53 @@ func (r *GormRepository) GetIntegrationsByAccountID(accountID uint64) ([]*domain
 
 func (r *GormRepository) SaveContacts(accountID uint64, contacts []*domain.Contact) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("account_id = ?", accountID).Delete(&Contact{}).Error; err != nil {
+		if err := tx.Model(&Contact{}).
+			Where("account_id = ?", accountID).
+			Update("status", "deleted").Error; err != nil {
 			return err
 		}
+
 		if len(contacts) == 0 {
 			return nil
 		}
 
 		models := make([]Contact, 0, len(contacts))
+		seen := map[string]struct{}{}
+
 		for _, c := range contacts {
+			if c == nil || c.Email == nil {
+				continue
+			}
+			email := strings.TrimSpace(*c.Email)
+			if email == "" {
+				continue
+			}
+			if _, ok := seen[email]; ok {
+				continue
+			}
+			seen[email] = struct{}{}
+
+			emailCopy := email
 			models = append(models, Contact{
 				AccountID: accountID,
 				Name:      c.Name,
-				Email:     c.Email,
+				Email:     &emailCopy,
+				Status:    "active",
 			})
 		}
-		return tx.Create(&models).Error
+
+		if len(models) == 0 {
+			return nil
+		}
+
+		return tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "account_id"}, {Name: "email"}},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"name",
+				"status",
+				"updated_at",
+			}),
+		}).Create(&models).Error
 	})
 }
 
@@ -224,5 +256,6 @@ func contactFromModel(m *Contact) *domain.Contact {
 		AccountID: m.AccountID,
 		Name:      m.Name,
 		Email:     m.Email,
+		Status:    m.Status,
 	}
 }

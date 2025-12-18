@@ -5,6 +5,7 @@ import (
 
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/amocrm"
+	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/queue"
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/usecase"
 )
 
@@ -18,19 +19,17 @@ type apiConfig struct {
 	integrationUC usecase.IntegrationUsecase
 	contactsUC    usecase.ContactsUsecase
 	amoClient     *amocrm.OAuthClient
+	producer      queue.Producer
 }
 
-func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient, producer queue.Producer) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,
 		contactsUC:    contactsUC,
 		amoClient:     amoClient,
-
-
-)
-
-
+		producer:      producer,
+	}
 
 	mux := http.NewServeMux()
 

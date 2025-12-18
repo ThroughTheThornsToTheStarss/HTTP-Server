@@ -4,7 +4,7 @@
 // 	protoc        v3.12.4
 // source: proto/account.proto
 
-package __proto
+package proto
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -129,7 +129,7 @@ const file_proto_account_proto_rawDesc = "" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x12\n" +
 	"\x04info\x18\x02 \x01(\tR\x04info2_\n" +
 	"\x0eAccountService\x12M\n" +
-	"\x0eDisableAccount\x12\x1c.proto.DisableAccountRequest\x1a\x1d.proto.DisableAccountResponseB\tZ\a.proto/b\x06proto3"
+	"\x0eDisableAccount\x12\x1c.proto.DisableAccountRequest\x1a\x1d.proto.DisableAccountResponseB\tZ\a./protob\x06proto3"
 
 var (
 	file_proto_account_proto_rawDescOnce sync.Once

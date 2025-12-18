@@ -21,8 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
 	go func() {
 		log.Printf("HTTP server on :%s", a.HTTPPort)
@@ -45,4 +45,9 @@ func main() {
 
 	_ = a.HTTPServer.Shutdown(shutdownCtx)
 	a.GRPCHandler.Stop()
+	
+	if a.Producer != nil {
+		_ = a.Producer.Close()
+	}
+
 }

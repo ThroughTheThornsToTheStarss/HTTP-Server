@@ -4,16 +4,15 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/domain"
 )
-
 
 func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	accountIDStr := r.URL.Query().Get("account_id")
-
 	if accountIDStr == "" {
 		respondWithError(w, http.StatusBadRequest, "account_id is required")
 		return
@@ -41,16 +40,21 @@ func (api *apiConfig) HandleAmoGetContacts(w http.ResponseWriter, r *http.Reques
 
 	contacts := make([]*domain.Contact, 0, len(amoContacts))
 	for _, c := range amoContacts {
-		var emailPtr *string
-		if email, ok := c.PrimaryEmail(); ok {
-			emailCopy := email
-			emailPtr = &emailCopy
+		email, ok := c.PrimaryEmail()
+		if !ok {
+			continue
 		}
+		email = strings.TrimSpace(strings.ToLower(email))
+		if email == "" {
+			continue
+		}
+		emailCopy := email
 
 		contacts = append(contacts, &domain.Contact{
 			AccountID: acc.ID,
 			Name:      c.Name,
-			Email:     emailPtr,
+			Email:     &emailCopy,
+			Status:    "active",
 		})
 	}
 
