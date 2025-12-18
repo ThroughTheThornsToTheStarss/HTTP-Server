@@ -15,7 +15,18 @@ services:
       - beanstalkd
     networks:
       - fullstack
-
+  worker:
+    build: .
+    container_name: go-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["./worker"]
+    depends_on:
+      - beanstalkd
+      - fullstack-mysql
+    networks:
+      - fullstack
   
   beanstalkd:
     container_name: ddev-beanstalkd

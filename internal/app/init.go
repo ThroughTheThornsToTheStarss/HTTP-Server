@@ -50,7 +50,8 @@ func NewFromEnv() (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("beanstalk connect: %w", err)
 	}
-	handler := api.New(accountUC, integrationUC, contactsUC, amoClient, producer)
+	webhookUC := usecase.NewWebhookContactsUsecase(repo, producer)
+	handler := api.New(accountUC, integrationUC, contactsUC, amoClient, producer, webhookUC)
 	httpSrv := &http.Server{
 		Addr:    ":" + httpPort,
 		Handler: handler,

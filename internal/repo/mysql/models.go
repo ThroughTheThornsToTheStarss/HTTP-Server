@@ -43,6 +43,7 @@ type Contact struct {
 	Status    string `gorm:"size:16;not null;default:'active'"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	AmoID     int64  `gorm:"not null;uniqueIndex:ux_contacts_account_amo"`
 }
 type SyncHistory struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
