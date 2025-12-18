@@ -43,11 +43,15 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_ = a.HTTPServer.Shutdown(shutdownCtx)
+	if err := a.HTTPServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("http shutdown error: %v", err)
+	}
 	a.GRPCHandler.Stop()
-	
+
 	if a.Producer != nil {
-		_ = a.Producer.Close()
+		if err := a.Producer.Close(); err != nil {
+			log.Printf("beanstalk producer close error: %v", err)
+		}
 	}
 
 }
