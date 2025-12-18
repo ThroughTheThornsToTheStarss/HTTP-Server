@@ -8,17 +8,16 @@ import (
 	"git.amocrm.ru/ilnasertdinov/http-server-go/internal/queue"
 )
 
-func (p *Producer) PushInitialSyncJob(ctx context.Context, accountID uint64) (uint64, error) {
+func (p *Producer) put(ctx context.Context, job queue.Job) (uint64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
 	}
-	if accountID == 0 {
+	if job.AccountID == 0 {
 		return 0, errors.New("account_id must be > 0")
 	}
 
-	job := queue.Job{
-		Kind:      "contacts_initial_sync",
-		AccountID: accountID,
+	if job.Kind == "" {
+		return 0, errors.New("job kind is required")
 	}
 
 	body, err := json.Marshal(job)
@@ -36,3 +35,25 @@ func (p *Producer) Close() error {
 	return p.conn.Close()
 }
 
+func (p *Producer) PushInitialSyncJob(ctx context.Context, accountID uint64) (uint64, error) {
+	return p.put(ctx, queue.Job{
+		Kind:      queue.JobKindInitialSync,
+		AccountID: accountID,
+	})
+}
+
+func (p *Producer) PushWebhookUpsertJob(ctx context.Context, accountID uint64, contactIDs []int64) (uint64, error) {
+	return p.put(ctx, queue.Job{
+		Kind:       queue.JobKindWebhookUpsert, 
+		AccountID:  accountID,
+		ContactIDs: contactIDs,
+	})
+}
+
+func (p *Producer) PushWebhookDeleteJob(ctx context.Context, accountID uint64, contactIDs []int64) (uint64, error) {
+	return p.put(ctx, queue.Job{
+		Kind:       queue.JobKindWebhookDelete, 
+		AccountID:  accountID,
+		ContactIDs: contactIDs,
+	})
+}
