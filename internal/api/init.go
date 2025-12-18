@@ -19,15 +19,17 @@ type apiConfig struct {
 	contactsUC    usecase.ContactsUsecase
 	amoClient     *amocrm.OAuthClient
 	producer      queue.Producer
+	webhookUC *usecase.WebhookContactsUsecase
 }
 
-func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient, producer queue.Producer) http.Handler {
+func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsecase, contactsUC usecase.ContactsUsecase, amoClient *amocrm.OAuthClient, producer queue.Producer, webhookUC *usecase.WebhookContactsUsecase) http.Handler {
 	apiCfg := &apiConfig{
 		accountUC:     accountUC,
 		integrationUC: integrationUC,
 		contactsUC:    contactsUC,
 		amoClient:     amoClient,
 		producer:      producer,
+		webhookUC:     webhookUC,
 	}
 
 	mux := http.NewServeMux()
@@ -47,5 +49,7 @@ func New(accountUC usecase.AccountUsecase, integrationUC usecase.IntegrationUsec
 
 	mux.HandleFunc("POST /integrations/unisender", apiCfg.HandleUnisenderKey)
 
+	mux.HandleFunc("POST /webhooks/contacts", apiCfg.HandleContactsWebhook)
+	
 	return mux
 }
