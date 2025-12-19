@@ -15,6 +15,8 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const waitAnyChildPID = -1
+
 type workerMode string
 
 const (
@@ -158,7 +160,7 @@ func terminateAll(cmds []*exec.Cmd, timeout time.Duration) {
 	reapNonBlocking := func() {
 		for {
 			var ws syscall.WaitStatus
-			pid, err := syscall.Wait4(-1, &ws, syscall.WNOHANG, nil)
+			pid, err := syscall.Wait4(waitAnyChildPID, &ws, syscall.WNOHANG, nil)
 			if err != nil {
 				return
 			}
@@ -185,7 +187,7 @@ func terminateAll(cmds []*exec.Cmd, timeout time.Duration) {
 
 	for len(pids) > 0 {
 		var ws syscall.WaitStatus
-		pid, err := syscall.Wait4(-1, &ws, 0, nil)
+		pid, err := syscall.Wait4(waitAnyChildPID, &ws, 0, nil)
 		if err != nil {
 			return
 		}
