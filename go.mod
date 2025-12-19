@@ -6,6 +6,7 @@ require (
 	github.com/beanstalkd/go-beanstalk v0.2.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
+	github.com/urfave/cli/v3 v3.6.1
 	google.golang.org/protobuf v1.36.10
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1

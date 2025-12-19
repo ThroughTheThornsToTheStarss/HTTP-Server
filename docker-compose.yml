@@ -15,18 +15,7 @@ services:
       - beanstalkd
     networks:
       - fullstack
-  worker:
-    build: .
-    container_name: go-worker
-    restart: unless-stopped
-    env_file:
-      - .env
-    command: ["./worker"]
-    depends_on:
-      - beanstalkd
-      - fullstack-mysql
-    networks:
-      - fullstack
+  
   
   beanstalkd:
     container_name: ddev-beanstalkd
@@ -40,7 +29,20 @@ services:
     - ".:/mnt/ddev_config"
     networks:
       - fullstack
-
+  
+  workers:
+    build: .
+    container_name: go-workers
+    restart: unless-stopped
+    env_file:
+    - .env
+    command: ["./workers", "--n", "3", "--bin", "./worker", "--mode", "webhook"]
+    depends_on:
+    - beanstalkd
+    - fullstack-mysql
+    networks:
+    - fullstack
+  
   fullstack-mysql:
     image: mysql:5.7
     container_name: fullstack-mysql
