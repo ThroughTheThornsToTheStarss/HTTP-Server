@@ -19,6 +19,11 @@ import (
 	"github.com/beanstalkd/go-beanstalk"
 )
 
+const (
+	workerKindsSetCap = 8
+	workerKindsSep    = ","
+)
+
 func getenv(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -160,11 +165,11 @@ func processJob(ctx context.Context, repo contactRepo, job queue.Job) error {
 func allowedKindsFromEnv() map[string]struct{} {
 	raw := strings.TrimSpace(os.Getenv("WORKER_KINDS"))
 	if raw == "" {
-		return nil 
+		return nil
 	}
 
-	set := make(map[string]struct{}, 8)
-	for _, p := range strings.Split(raw, ",") {
+	set := make(map[string]struct{}, workerKindsSetCap)
+	for _, p := range strings.Split(raw, workerKindsSep) {
 		k := strings.TrimSpace(p)
 		if k != "" {
 			set[k] = struct{}{}
