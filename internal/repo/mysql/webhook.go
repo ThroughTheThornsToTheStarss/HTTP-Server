@@ -37,8 +37,13 @@ func (r *GormRepository) UpsertContactFromWebhook(accountID uint64, amoID int64,
 	}
 
 	if err := r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "account_id"}, {Name: "amo_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"name", "email", "status", "updated_at"}),
+		Columns: []clause.Column{{Name: "account_id"}, {Name: "amo_id"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"name": clause.Expr{SQL: "IF(VALUES(name) <> '', VALUES(name), name)"},
+			"email": clause.Expr{SQL: "COALESCE(VALUES(email), email)"},
+			"status":     status,
+			"updated_at": time.Now(),
+		}),
 	}).Create(&m).Error; err != nil {
 		return 0, err
 	}

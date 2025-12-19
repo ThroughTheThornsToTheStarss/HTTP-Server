@@ -15,10 +15,10 @@ import (
 var (
 	reEventID   = regexp.MustCompile(`^contacts\[(add|update|restore)\]\[\d+\]\[id\]$`)
 	reEventName = regexp.MustCompile(`^contacts\[(add|update|restore)\]\[\d+\]\[name\]$`)
-
-	reDel1 = regexp.MustCompile(`^contacts\[delete\]$`)
-	reDel2 = regexp.MustCompile(`^contacts\[delete\]\[\d+\]$`)
-	reDel3 = regexp.MustCompile(`^contacts\[delete\]\[\d+\]\[id\]$`)
+	reIndex     = regexp.MustCompile(`\[(\d+)\]`)
+	reDel1      = regexp.MustCompile(`^contacts\[delete\]$`)
+	reDel2      = regexp.MustCompile(`^contacts\[delete\]\[\d+\]$`)
+	reDel3      = regexp.MustCompile(`^contacts\[delete\]\[\d+\]\[id\]$`)
 )
 
 func (api *apiConfig) HandleContactsWebhook(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +105,7 @@ func parseEvents(form url.Values) []usecase.WebhookContactEvent {
 		val := strings.TrimSpace(v[0])
 
 		if reEventID.MatchString(k) {
-			nums := regexp.MustCompile(`\[(\d+)\]`).FindAllStringSubmatch(k, -1)
+			nums := reIndex.FindAllStringSubmatch(k, -1)
 			if len(nums) == 0 {
 				continue
 			}
@@ -119,7 +119,7 @@ func parseEvents(form url.Values) []usecase.WebhookContactEvent {
 		}
 
 		if reEventName.MatchString(k) {
-			nums := regexp.MustCompile(`\[(\d+)\]`).FindAllStringSubmatch(k, -1)
+			nums := reIndex.FindAllStringSubmatch(k, -1)
 			if len(nums) == 0 {
 				continue
 			}
@@ -148,7 +148,7 @@ func parseEvents(form url.Values) []usecase.WebhookContactEvent {
 		out = append(out, usecase.WebhookContactEvent{
 			AmoID:   t.id,
 			Name:    t.name,
-			Email:   nil,   
+			Email:   nil,
 			Deleted: false,
 		})
 	}
