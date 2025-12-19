@@ -39,8 +39,8 @@ func (r *GormRepository) UpsertContactFromWebhook(accountID uint64, amoID int64,
 	if err := r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "account_id"}, {Name: "amo_id"}},
 		DoUpdates: clause.Assignments(map[string]any{
-			"name": clause.Expr{SQL: "IF(VALUES(name) <> '', VALUES(name), name)"},
-			"email": clause.Expr{SQL: "COALESCE(VALUES(email), email)"},
+			"name":       clause.Expr{SQL: "IF(VALUES(name) <> '', VALUES(name), name)"},
+			"email":      clause.Expr{SQL: "COALESCE(VALUES(email), email)"},
 			"status":     status,
 			"updated_at": time.Now(),
 		}),
@@ -76,8 +76,8 @@ func (r *GormRepository) AddSyncHistory(contactID uint, status string, message s
 	if contactID == 0 {
 		return errors.New("contact_id must be > 0")
 	}
+
 	h := SyncHistory{
-		ContactID: contactID,
 		Status:    strings.TrimSpace(status),
 		Message:   message,
 		CreatedAt: time.Now(),
@@ -85,7 +85,9 @@ func (r *GormRepository) AddSyncHistory(contactID uint, status string, message s
 	if h.Status == "" {
 		h.Status = "unknown"
 	}
-	return r.db.Create(&h).Error
+
+	c := Contact{ID: contactID}
+	return r.db.Model(&c).Association("SyncHistories").Append(&h)
 }
 
 func (r *GormRepository) TrimSyncHistory(contactID uint, keepLast int) error {

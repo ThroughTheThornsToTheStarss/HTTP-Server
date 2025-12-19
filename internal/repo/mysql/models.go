@@ -30,7 +30,8 @@ type Integration struct {
 
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-	UnisenderKey string `gorm:"type:text"`
+	UnisenderKey string  `gorm:"type:text"`
+	Account      Account `gorm:"foreignKey:AccountID;references:ID" json:"-"`
 }
 
 type Contact struct {
@@ -40,10 +41,12 @@ type Contact struct {
 	Name  string  `gorm:"size:255"`
 	Email *string `gorm:"size:255;uniqueIndex:uniq_acc_email"`
 
-	Status    string `gorm:"size:16;not null;default:'active'"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	AmoID     int64  `gorm:"not null;uniqueIndex:ux_contacts_account_amo"`
+	Status        string `gorm:"size:16;not null;default:'active'"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	AmoID         int64         `gorm:"not null;uniqueIndex:ux_contacts_account_amo"`
+	Account       Account       `gorm:"foreignKey:AccountID;references:ID" json:"-"`
+	SyncHistories []SyncHistory `gorm:"foreignKey:ContactID;constraint:OnDelete:CASCADE" json:"-"`
 }
 type SyncHistory struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
@@ -52,4 +55,5 @@ type SyncHistory struct {
 	Message   string `gorm:"type:text"`
 
 	CreatedAt time.Time
+	Contact   Contact `gorm:"foreignKey:ContactID;references:ID" json:"-"`
 }

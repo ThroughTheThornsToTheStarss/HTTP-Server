@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -44,6 +45,13 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	allowedKinds := allowedKindsFromEnv()
+	if allowedKinds == nil {
+		log.Printf("worker kinds: all")
+	} else {
+		log.Printf("worker kinds: %v", allowedKinds)
+	}
+
 	log.Printf("worker started; beanstalk=%s", beanstalkAddr)
 
 	for {
@@ -61,6 +69,10 @@ func main() {
 			}
 			log.Printf("reserve error: %v", err)
 			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		if !kindAllowed(allowedKinds, job.Kind) {
+			_ = consumer.Release(jobID, 2*time.Second)
 			continue
 		}
 
@@ -144,4 +156,27 @@ func processJob(ctx context.Context, repo contactRepo, job queue.Job) error {
 	default:
 		return fmt.Errorf("%w: unknown kind %q", errNonRetryable, job.Kind)
 	}
+}
+func allowedKindsFromEnv() map[string]struct{} {
+	raw := strings.TrimSpace(os.Getenv("WORKER_KINDS"))
+	if raw == "" {
+		return nil 
+	}
+
+	set := make(map[string]struct{}, 8)
+	for _, p := range strings.Split(raw, ",") {
+		k := strings.TrimSpace(p)
+		if k != "" {
+			set[k] = struct{}{}
+		}
+	}
+	return set
+}
+
+func kindAllowed(set map[string]struct{}, kind string) bool {
+	if set == nil {
+		return true
+	}
+	_, ok := set[kind]
+	return ok
 }
